@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalcVerse — Ultimate Calculator Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #7c6fff;
+    --accent2: #ff6f91;
+    --accent3: #6fffb0;
+    --accent4: #ffcf6f;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --display-bg: #0d0d16;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND MESH */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 600px 400px at 20% 10%, rgba(124,111,255,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 600px at 80% 80%, rgba(255,111,145,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 500px 300px at 60% 30%, rgba(111,255,176,0.06) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+  }
+  .logo {
+    font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    flex-shrink: 0;
+  }
+  .nav-tabs {
+    display: flex; gap: 0.25rem; flex-wrap: nowrap;
+    list-style: none; overflow-x: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tabs button {
+    background: none; border: none; color: var(--muted);
+    font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 600;
+    padding: 0.4rem 0.65rem; border-radius: 8px; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.5px; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .nav-tabs button:hover { color: var(--text); background: var(--card); }
+  .nav-tabs button.active { color: var(--accent); background: rgba(124,111,255,0.15); }
+
+  /* HAMBURGER */
+  .hamburger {
+    display: none; flex-direction: column; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 4px;
+    flex-shrink: 0;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: var(--text); border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* MOBILE MENU OVERLAY */
+  .mobile-menu {
+    display: none; position: fixed; top: 60px; left: 0; right: 0; bottom: 0;
+    background: rgba(10,10,15,0.97); backdrop-filter: blur(20px);
+    z-index: 99; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.5rem; padding: 2rem;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu button {
+    background: var(--card); border: 1px solid var(--border); color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 600;
+    padding: 1rem 2rem; border-radius: 14px; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 1px; text-transform: uppercase;
+    width: 100%; max-width: 300px; text-align: center;
+  }
+  .mobile-menu button:hover, .mobile-menu button.active {
+    background: rgba(124,111,255,0.15); color: var(--accent); border-color: var(--accent);
+  }
+
+  /* MAIN */
+  main { position: relative; z-index: 1; padding: 2rem; max-width: 960px; margin: 0 auto; }
+
+  .section { display: none; animation: fadeUp 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .card-title {
+    font-size: 1.1rem; font-weight: 700;
+    margin-bottom: 1.5rem; color: var(--accent);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .card-title span { font-size: 1.3rem; }
+
+  /* DISPLAY */
+  .display {
+    background: var(--display-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.2rem 1.5rem;
+    margin-bottom: 1.2rem;
+    min-height: 90px; display: flex; flex-direction: column;
+    align-items: flex-end; justify-content: flex-end; gap: 0.3rem;
+  }
+  .display .expr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; color: var(--muted);
+    word-break: break-all; text-align: right;
+  }
+  .display .result {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.2rem; font-weight: 600; color: var(--text);
+    word-break: break-all; text-align: right;
+  }
+
+  /* BUTTONS GRID */
+  .btn-grid {
+    display: grid; gap: 0.6rem;
+  }
+  .btn-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .btn-grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem; font-weight: 500;
+    padding: 1rem 0.5rem; border-radius: 12px; border: none;
+    cursor: pointer; transition: all 0.15s; user-select: none;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn:hover { background: var(--border); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0) scale(0.96); }
+  .btn.op { color: var(--accent); background: rgba(124,111,255,0.08); }
+  .btn.eq { background: var(--accent); color: #fff; font-size: 1.2rem; font-weight: 700; border-color: var(--accent); }
+  .btn.eq:hover { background: #9186ff; }
+  .btn.clr { color: var(--accent2); background: rgba(255,111,145,0.08); }
+  .btn.fn { color: var(--accent3); background: rgba(111,255,176,0.06); font-size: 0.8rem; }
+  .btn.span2 { grid-column: span 2; }
+  .btn.span3 { grid-column: span 3; }
+
+  /* FORM INPUTS */
+  .form-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1rem; margin-bottom: 1rem;
+  }
+  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-group label {
+    display: block; font-size: 0.75rem; font-weight: 600;
+    color: var(--muted); margin-bottom: 0.4rem; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .form-group input, .form-group select {
+    width: 100%; padding: 0.8rem 1rem;
+    background: var(--display-bg); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+  .form-group select option { background: var(--card); }
+
+  .calc-btn {
+    width: 100%; padding: 1rem; margin-top: 0.5rem;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 12px; font-family: 'Syne', sans-serif;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.5px;
+  }
+  .calc-btn:hover { background: #9186ff; transform: translateY(-1px); }
+  .calc-btn.green { background: #22c55e; }
+  .calc-btn.green:hover { background: #16a34a; }
+  .calc-btn.orange { background: #f97316; }
+  .calc-btn.orange:hover { background: #ea580c; }
+
+  .result-box {
+    background: var(--display-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1rem;
+  }
+  .result-box .r-label {
+    font-size: 0.75rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;
+  }
+  .result-box .r-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.6rem; font-weight: 600; color: var(--accent3);
+  }
+  .result-box .r-sub {
+    font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem;
+  }
+
+  .multi-result {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.8rem; margin-top: 1rem;
+  }
+  .multi-result .result-box { margin-top: 0; }
+
+  /* CURRENCY */
+  .currency-swap {
+    display: flex; align-items: center; justify-content: center;
+    gap: 1rem; margin: 0.5rem 0;
+  }
+  .swap-btn {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--accent); font-size: 1.5rem; border-radius: 50%;
+    width: 44px; height: 44px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .swap-btn:hover { background: rgba(124,111,255,0.15); transform: rotate(180deg); }
+
+  /* TEMP CONVERTER */
+  .temp-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center; padding: 3rem 1rem 2rem;
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800;
+    line-height: 1.1; letter-spacing: -2px; margin-bottom: 1rem;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p { font-size: 1.05rem; color: var(--muted); max-width: 500px; margin: 0 auto 2rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .tag {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    padding: 0.35rem 0.8rem; border-radius: 100px; border: 1px solid var(--border);
+    color: var(--muted); background: var(--surface);
+  }
+
+  /* TABS inside section */
+  .inner-tabs {
+    display: flex; gap: 0.4rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .inner-tab {
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 600;
+    padding: 0.45rem 1rem; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--muted); cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .inner-tab:hover { color: var(--text); border-color: var(--accent); }
+  .inner-tab.active { background: rgba(124,111,255,0.15); color: var(--accent); border-color: var(--accent); }
+
+  .sub-section { display: none; }
+  .sub-section.active { display: block; }
+
+  /* UNIT CONVERTER */
+  .unit-result {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem; color: var(--accent3);
+    background: var(--display-bg); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.2rem; margin-top: 1rem;
+    text-align: center;
+  }
+
+  /* INNER TABS scrollable on mobile */
+  .inner-tabs {
+    overflow-x: auto; scrollbar-width: none;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px;
+  }
+  .inner-tabs::-webkit-scrollbar { display: none; }
+  .inner-tab { flex-shrink: 0; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .hamburger { display: flex; }
+    .nav-tabs { display: none; }
+    main { padding: 1rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .form-row.triple { grid-template-columns: 1fr 1fr; }
+    .multi-result { grid-template-columns: 1fr 1fr; }
+    .temp-grid { grid-template-columns: 1fr 1fr; }
+    nav { padding: 0 1rem; }
+    .btn { padding: 0.85rem 0.3rem; font-size: 0.88rem; }
+    .card { padding: 1.2rem; }
+    .display .result { font-size: 1.8rem; }
+  }
+  @media (max-width: 480px) {
+    .multi-result { grid-template-columns: 1fr; }
+    .temp-grid { grid-template-columns: 1fr; }
+    .hero h1 { letter-spacing: -1px; }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .note { font-size: 0.75rem; color: var(--muted); margin-top: 0.8rem; font-style: italic; }
+  
+  /* History */
+  .history { max-height: 180px; overflow-y: auto; margin-top: 1rem; }
+  .history-item {
+    display: flex; justify-content: space-between;
+    padding: 0.5rem 0; border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .history-item .h-result { color: var(--accent3); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">⟨ CalcVerse ⟩</div>
+  <ul class="nav-tabs">
+    <li><button onclick="showSection('home')" class="active" id="tab-home">Home</button></li>
+    <li><button onclick="showSection('standard')" id="tab-standard">Standard</button></li>
+    <li><button onclick="showSection('scientific')" id="tab-scientific">Scientific</button></li>
+    <li><button onclick="showSection('finance')" id="tab-finance">Finance</button></li>
+    <li><button onclick="showSection('currency')" id="tab-currency">Currency</button></li>
+    <li><button onclick="showSection('converter')" id="tab-converter">Units</button></li>
+    <li><button onclick="showSection('percent')" id="tab-percent">%</button></li>
+  </ul>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <button onclick="showSection('home');toggleMenu()" id="mob-home" class="active">🏠 Home</button>
+  <button onclick="showSection('standard');toggleMenu()" id="mob-standard">🔢 Standard</button>
+  <button onclick="showSection('scientific');toggleMenu()" id="mob-scientific">🔬 Scientific</button>
+  <button onclick="showSection('finance');toggleMenu()" id="mob-finance">💰 Finance</button>
+  <button onclick="showSection('currency');toggleMenu()" id="mob-currency">💱 Currency</button>
+  <button onclick="showSection('converter');toggleMenu()" id="mob-converter">📐 Units</button>
+  <button onclick="showSection('percent');toggleMenu()" id="mob-percent">📊 % Calc</button>
+</div>
+
+<main>
+
+<!-- HOME -->
+<div class="section active" id="home">
+  <div class="hero">
+    <h1>Every Calculation<br><em>You'll Ever Need</em></h1>
+    <p>A complete calculator suite — finance, currency, scientific, unit conversion, and more. All in one place.</p>
+    <div class="tags">
+      <span class="tag">Standard</span>
+      <span class="tag">Scientific</span>
+      <span class="tag">Compound Interest</span>
+      <span class="tag">Simple Interest</span>
+      <span class="tag">EMI / Loan</span>
+      <span class="tag">Currency (180+ Countries)</span>
+      <span class="tag">% Profit & Loss</span>
+      <span class="tag">Temperature</span>
+      <span class="tag">Length · Mass · Speed</span>
+      <span class="tag">Area · Volume</span>
+      <span class="tag">Data Size</span>
+      <span class="tag">Discount</span>
+      <span class="tag">Age Calculator</span>
+      <span class="tag">GST / Tax</span>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-top:1.5rem">
+    <div class="card" style="cursor:pointer" onclick="showSection('standard')">
+      <div class="card-title"><span>🔢</span> Standard & Scientific</div>
+      <p style="color:var(--muted);font-size:0.88rem">Full keyboard, history, brackets, all operations.</p>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="showSection('finance')">
+      <div class="card-title"><span>💰</span> Finance Suite</div>
+      <p style="color:var(--muted);font-size:0.88rem">Compound & Simple Interest, EMI, SIP, PPF, FD.</p>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="showSection('currency')">
+      <div class="card-title"><span>💱</span> Currency Converter</div>
+      <p style="color:var(--muted);font-size:0.88rem">180+ currencies. Live rates via API with fallback.</p>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="showSection('converter')">
+      <div class="card-title"><span>📐</span> Unit Converter</div>
+      <p style="color:var(--muted);font-size:0.88rem">Temperature, Length, Mass, Speed, Area, Volume, Data.</p>
+    </div>
+    <div class="card" style="cursor:pointer" onclick="showSection('percent')">
+      <div class="card-title"><span>📊</span> Percent & Business</div>
+      <p style="color:var(--muted);font-size:0.88rem">Profit/Loss, Discount, Markup, GST, Age.</p>
+    </div>
+  </div>
+</div>
+
+<!-- STANDARD CALCULATOR -->
+<div class="section" id="standard">
+  <div class="card">
+    <div class="card-title"><span>🔢</span> Standard Calculator</div>
+    <div class="display">
+      <div class="expr" id="std-expr"></div>
+      <div class="result" id="std-display">0</div>
+    </div>
+    <div class="btn-grid btn-grid-4">
+      <button class="btn clr" onclick="stdClear()">AC</button>
+      <button class="btn clr" onclick="stdDel()">⌫</button>
+      <button class="btn op" onclick="stdInput('%')">%</button>
+      <button class="btn op" onclick="stdInput('/')">÷</button>
+      <button class="btn" onclick="stdInput('7')">7</button>
+      <button class="btn" onclick="stdInput('8')">8</button>
+      <button class="btn" onclick="stdInput('9')">9</button>
+      <button class="btn op" onclick="stdInput('*')">×</button>
+      <button class="btn" onclick="stdInput('4')">4</button>
+      <button class="btn" onclick="stdInput('5')">5</button>
+      <button class="btn" onclick="stdInput('6')">6</button>
+      <button class="btn op" onclick="stdInput('-')">−</button>
+      <button class="btn" onclick="stdInput('1')">1</button>
+      <button class="btn" onclick="stdInput('2')">2</button>
+      <button class="btn" onclick="stdInput('3')">3</button>
+      <button class="btn op" onclick="stdInput('+')">+</button>
+      <button class="btn" onclick="stdToggleSign()">+/−</button>
+      <button class="btn" onclick="stdInput('0')">0</button>
+      <button class="btn" onclick="stdInput('.')">.</button>
+      <button class="btn eq" onclick="stdEquals()">=</button>
+    </div>
+    <div style="margin-top:1rem">
+      <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">History</div>
+      <div class="history" id="std-history"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCIENTIFIC -->
+<div class="section" id="scientific">
+  <div class="card">
+    <div class="card-title"><span>🔬</span> Scientific Calculator</div>
+    <div class="display">
+      <div class="expr" id="sci-expr"></div>
+      <div class="result" id="sci-display">0</div>
+    </div>
+    <div class="btn-grid btn-grid-5" style="margin-bottom:0.6rem">
+      <button class="btn fn" onclick="sciFunc('sin(')">sin</button>
+      <button class="btn fn" onclick="sciFunc('cos(')">cos</button>
+      <button class="btn fn" onclick="sciFunc('tan(')">tan</button>
+      <button class="btn fn" onclick="sciFunc('asin(')">sin⁻¹</button>
+      <button class="btn fn" onclick="sciFunc('acos(')">cos⁻¹</button>
+      <button class="btn fn" onclick="sciFunc('atan(')">tan⁻¹</button>
+      <button class="btn fn" onclick="sciFunc('log(')">log</button>
+      <button class="btn fn" onclick="sciFunc('ln(')">ln</button>
+      <button class="btn fn" onclick="sciFunc('sqrt(')">√</button>
+      <button class="btn fn" onclick="sciFunc('cbrt(')">∛</button>
+      <button class="btn fn" onclick="sciFunc('**2')">x²</button>
+      <button class="btn fn" onclick="sciFunc('**3')">x³</button>
+      <button class="btn fn" onclick="sciFunc('**')">xʸ</button>
+      <button class="btn fn" onclick="sciFunc('(')">( </button>
+      <button class="btn fn" onclick="sciFunc(')')"> )</button>
+      <button class="btn fn" onclick="sciConst('Math.PI')">π</button>
+      <button class="btn fn" onclick="sciConst('Math.E')">e</button>
+      <button class="btn fn" onclick="sciFunc('1/')">1/x</button>
+      <button class="btn fn" onclick="sciFunc('abs(')">|x|</button>
+      <button class="btn fn" onclick="sciFunc('factorial(')">n!</button>
+    </div>
+    <div class="btn-grid btn-grid-4">
+      <button class="btn clr" onclick="sciClear()">AC</button>
+      <button class="btn clr" onclick="sciDel()">⌫</button>
+      <button class="btn op" onclick="sciInput('%')">%</button>
+      <button class="btn op" onclick="sciInput('/')">÷</button>
+      <button class="btn" onclick="sciInput('7')">7</button>
+      <button class="btn" onclick="sciInput('8')">8</button>
+      <button class="btn" onclick="sciInput('9')">9</button>
+      <button class="btn op" onclick="sciInput('*')">×</button>
+      <button class="btn" onclick="sciInput('4')">4</button>
+      <button class="btn" onclick="sciInput('5')">5</button>
+      <button class="btn" onclick="sciInput('6')">6</button>
+      <button class="btn op" onclick="sciInput('-')">−</button>
+      <button class="btn" onclick="sciInput('1')">1</button>
+      <button class="btn" onclick="sciInput('2')">2</button>
+      <button class="btn" onclick="sciInput('3')">3</button>
+      <button class="btn op" onclick="sciInput('+')">+</button>
+      <button class="btn" onclick="sciToggleSign()">+/−</button>
+      <button class="btn" onclick="sciInput('0')">0</button>
+      <button class="btn" onclick="sciInput('.')">.</button>
+      <button class="btn eq" onclick="sciEquals()">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINANCE -->
+<div class="section" id="finance">
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showSub('finance','compound')">Compound Interest</button>
+    <button class="inner-tab" onclick="showSub('finance','simple')">Simple Interest</button>
+    <button class="inner-tab" onclick="showSub('finance','emi')">EMI / Loan</button>
+    <button class="inner-tab" onclick="showSub('finance','sip')">SIP / MF</button>
+    <button class="inner-tab" onclick="showSub('finance','fd')">FD / RD</button>
+  </div>
+
+  <!-- Compound Interest -->
+  <div class="sub-section active" id="finance-compound">
+    <div class="card">
+      <div class="card-title"><span>📈</span> Compound Interest</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Principal Amount (₹ / $)</label>
+          <input type="number" id="ci-p" placeholder="100000" value="100000">
+        </div>
+        <div class="form-group">
+          <label>Annual Interest Rate (%)</label>
+          <input type="number" id="ci-r" placeholder="8.5" value="8.5">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Time (Years)</label>
+          <input type="number" id="ci-t" placeholder="5" value="5">
+        </div>
+        <div class="form-group">
+          <label>Compounding Frequency</label>
+          <select id="ci-n">
+            <option value="1">Annually (1x)</option>
+            <option value="2">Semi-Annually (2x)</option>
+            <option value="4" selected>Quarterly (4x)</option>
+            <option value="12">Monthly (12x)</option>
+            <option value="365">Daily (365x)</option>
+          </select>
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcCI()">Calculate Compound Interest</button>
+      <div class="multi-result" id="ci-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Maturity Amount</div>
+          <div class="r-value" id="ci-total"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Interest Earned</div>
+          <div class="r-value" id="ci-interest" style="color:var(--accent2)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Effective Rate</div>
+          <div class="r-value" id="ci-eff" style="color:var(--accent4)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simple Interest -->
+  <div class="sub-section" id="finance-simple">
+    <div class="card">
+      <div class="card-title"><span>📊</span> Simple Interest</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Principal (P)</label>
+          <input type="number" id="si-p" placeholder="50000" value="50000">
+        </div>
+        <div class="form-group">
+          <label>Rate % per annum (R)</label>
+          <input type="number" id="si-r" placeholder="7" value="7">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Time in Years (T)</label>
+          <input type="number" id="si-t" placeholder="3" value="3">
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcSI()">Calculate Simple Interest</button>
+      <div class="multi-result" id="si-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Simple Interest</div>
+          <div class="r-value" id="si-interest"></div>
+          <div class="r-sub">SI = P × R × T / 100</div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Total Amount</div>
+          <div class="r-value" id="si-total" style="color:var(--accent2)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Per Year Interest</div>
+          <div class="r-value" id="si-yearly" style="color:var(--accent4)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMI -->
+  <div class="sub-section" id="finance-emi">
+    <div class="card">
+      <div class="card-title"><span>🏦</span> EMI / Loan Calculator</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Loan Amount</label>
+          <input type="number" id="emi-p" placeholder="1000000" value="1000000">
+        </div>
+        <div class="form-group">
+          <label>Annual Interest Rate (%)</label>
+          <input type="number" id="emi-r" placeholder="8.5" value="8.5">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Loan Tenure (Months)</label>
+          <input type="number" id="emi-n" placeholder="240" value="240">
+        </div>
+      </div>
+      <button class="calc-btn orange" onclick="calcEMI()">Calculate EMI</button>
+      <div class="multi-result" id="emi-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Monthly EMI</div>
+          <div class="r-value" id="emi-emi"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Total Payment</div>
+          <div class="r-value" id="emi-total" style="color:var(--accent2)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Total Interest</div>
+          <div class="r-value" id="emi-interest" style="color:var(--accent4)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIP -->
+  <div class="sub-section" id="finance-sip">
+    <div class="card">
+      <div class="card-title"><span>📈</span> SIP / Mutual Fund Calculator</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monthly Investment</label>
+          <input type="number" id="sip-m" placeholder="5000" value="5000">
+        </div>
+        <div class="form-group">
+          <label>Expected Return (% p.a.)</label>
+          <input type="number" id="sip-r" placeholder="12" value="12">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Investment Duration (Years)</label>
+          <input type="number" id="sip-t" placeholder="10" value="10">
+        </div>
+      </div>
+      <button class="calc-btn green" onclick="calcSIP()">Calculate SIP Returns</button>
+      <div class="multi-result" id="sip-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Invested Amount</div>
+          <div class="r-value" id="sip-invested"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Wealth Gained</div>
+          <div class="r-value" id="sip-gain" style="color:var(--accent3)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Maturity Value</div>
+          <div class="r-value" id="sip-total" style="color:var(--accent2)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FD/RD -->
+  <div class="sub-section" id="finance-fd">
+    <div class="card">
+      <div class="card-title"><span>🏧</span> FD / RD Calculator</div>
+      <div class="inner-tabs" style="margin-bottom:1rem">
+        <button class="inner-tab active" id="fd-tab" onclick="toggleFDRD('fd')">Fixed Deposit</button>
+        <button class="inner-tab" id="rd-tab" onclick="toggleFDRD('rd')">Recurring Deposit</button>
+      </div>
+      <div id="fd-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Principal Amount</label>
+            <input type="number" id="fd-p" placeholder="100000" value="100000">
+          </div>
+          <div class="form-group">
+            <label>Rate (% p.a.)</label>
+            <input type="number" id="fd-r" placeholder="7" value="7">
+          </div>
+          <div class="form-group">
+            <label>Period (Months)</label>
+            <input type="number" id="fd-t" placeholder="12" value="12">
+          </div>
+          <div class="form-group">
+            <label>Compounding</label>
+            <select id="fd-n">
+              <option value="4">Quarterly</option>
+              <option value="12">Monthly</option>
+              <option value="2">Half-Yearly</option>
+              <option value="1">Yearly</option>
+            </select>
+          </div>
+        </div>
+        <button class="calc-btn" onclick="calcFD()">Calculate FD</button>
+      </div>
+      <div id="rd-form" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Monthly Deposit</label>
+            <input type="number" id="rd-m" placeholder="5000" value="5000">
+          </div>
+          <div class="form-group">
+            <label>Rate (% p.a.)</label>
+            <input type="number" id="rd-r" placeholder="6.5" value="6.5">
+          </div>
+          <div class="form-group" style="grid-column:span 2">
+            <label>Duration (Months)</label>
+            <input type="number" id="rd-t" placeholder="24" value="24">
+          </div>
+        </div>
+        <button class="calc-btn" onclick="calcRD()">Calculate RD</button>
+      </div>
+      <div class="multi-result" id="fd-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Principal</div>
+          <div class="r-value" id="fd-principal"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Interest Earned</div>
+          <div class="r-value" id="fd-interest" style="color:var(--accent3)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Maturity Value</div>
+          <div class="r-value" id="fd-total" style="color:var(--accent2)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CURRENCY CONVERTER -->
+<div class="section" id="currency">
+  <div class="card">
+    <div class="card-title"><span>💱</span> Currency Converter</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="number" id="curr-amount" placeholder="1000" value="1000" oninput="convertCurrency()">
+      </div>
+      <div class="form-group">
+        <label>From</label>
+        <select id="curr-from" onchange="convertCurrency()"></select>
+      </div>
+    </div>
+    <div class="currency-swap">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <button class="swap-btn" onclick="swapCurrency()">⇄</button>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem">
+      <label>To</label>
+      <select id="curr-to" onchange="convertCurrency()"></select>
+    </div>
+    <div class="result-box">
+      <div class="r-label">Converted Amount</div>
+      <div class="r-value" id="curr-result">—</div>
+      <div class="r-sub" id="curr-rate">Loading exchange rates...</div>
+    </div>
+    <p class="note">* Exchange rates are fetched live. If unavailable, fallback approximate rates are used.</p>
+    <div style="margin-top:1rem">
+      <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.5px">Quick Compare (1 unit vs 10 major currencies)</div>
+      <div id="curr-multi" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.5rem;margin-top:0.5rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- UNIT CONVERTER -->
+<div class="section" id="converter">
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showSub('converter','temp')">🌡 Temperature</button>
+    <button class="inner-tab" onclick="showSub('converter','length')">📏 Length</button>
+    <button class="inner-tab" onclick="showSub('converter','mass')">⚖️ Mass</button>
+    <button class="inner-tab" onclick="showSub('converter','speed')">💨 Speed</button>
+    <button class="inner-tab" onclick="showSub('converter','area')">◼ Area</button>
+    <button class="inner-tab" onclick="showSub('converter','volume')">🧪 Volume</button>
+    <button class="inner-tab" onclick="showSub('converter','data')">💾 Data</button>
+    <button class="inner-tab" onclick="showSub('converter','time2')">⏱ Time</button>
+  </div>
+
+  <!-- Temperature -->
+  <div class="sub-section active" id="converter-temp">
+    <div class="card">
+      <div class="card-title"><span>🌡</span> Temperature Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="temp-val" placeholder="100" value="100" oninput="convertTemp()">
+        </div>
+        <div class="form-group">
+          <label>From Unit</label>
+          <select id="temp-from" onchange="convertTemp()">
+            <option value="C">Celsius (°C)</option>
+            <option value="F">Fahrenheit (°F)</option>
+            <option value="K">Kelvin (K)</option>
+            <option value="R">Rankine (°R)</option>
+          </select>
+        </div>
+      </div>
+      <div class="temp-grid" id="temp-results"></div>
+    </div>
+  </div>
+
+  <!-- Length -->
+  <div class="sub-section" id="converter-length">
+    <div class="card">
+      <div class="card-title"><span>📏</span> Length Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="len-val" placeholder="1" value="1" oninput="convertUnit('len')">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select id="len-from" onchange="convertUnit('len')">
+            <option value="m">Meter</option>
+            <option value="km">Kilometer</option>
+            <option value="cm">Centimeter</option>
+            <option value="mm">Millimeter</option>
+            <option value="mi">Mile</option>
+            <option value="yd">Yard</option>
+            <option value="ft">Foot</option>
+            <option value="in">Inch</option>
+            <option value="nm">Nautical Mile</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>To</label>
+          <select id="len-to" onchange="convertUnit('len')">
+            <option value="km">Kilometer</option>
+            <option value="m">Meter</option>
+            <option value="cm">Centimeter</option>
+            <option value="mm">Millimeter</option>
+            <option value="mi">Mile</option>
+            <option value="yd">Yard</option>
+            <option value="ft">Foot</option>
+            <option value="in">Inch</option>
+            <option value="nm">Nautical Mile</option>
+          </select>
+        </div>
+      </div>
+      <div class="unit-result" id="len-result">—</div>
+    </div>
+  </div>
+
+  <!-- Mass -->
+  <div class="sub-section" id="converter-mass">
+    <div class="card">
+      <div class="card-title"><span>⚖️</span> Mass / Weight Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="mass-val" placeholder="1" value="1" oninput="convertUnit('mass')">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select id="mass-from" onchange="convertUnit('mass')">
+            <option value="kg">Kilogram</option>
+            <option value="g">Gram</option>
+            <option value="mg">Milligram</option>
+            <option value="t">Metric Ton</option>
+            <option value="lb">Pound</option>
+            <option value="oz">Ounce</option>
+            <option value="st">Stone</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>To</label>
+          <select id="mass-to" onchange="convertUnit('mass')">
+            <option value="g">Gram</option>
+            <option value="kg">Kilogram</option>
+            <option value="mg">Milligram</option>
+            <option value="t">Metric Ton</option>
+            <option value="lb">Pound</option>
+            <option value="oz">Ounce</option>
+            <option value="st">Stone</option>
+          </select>
+        </div>
+      </div>
+      <div class="unit-result" id="mass-result">—</div>
+    </div>
+  </div>
+
+  <!-- Speed -->
+  <div class="sub-section" id="converter-speed">
+    <div class="card">
+      <div class="card-title"><span>💨</span> Speed Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="spd-val" placeholder="100" value="100" oninput="convertUnit('spd')">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select id="spd-from" onchange="convertUnit('spd')">
+            <option value="kmh">km/h</option>
+            <option value="ms">m/s</option>
+            <option value="mph">mph</option>
+            <option value="kn">Knots</option>
+            <option value="mach">Mach</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>To</label>
+          <select id="spd-to" onchange="convertUnit('spd')">
+            <option value="mph">mph</option>
+            <option value="kmh">km/h</option>
+            <option value="ms">m/s</option>
+            <option value="kn">Knots</option>
+            <option value="mach">Mach</option>
+          </select>
+        </div>
+      </div>
+      <div class="unit-result" id="spd-result">—</div>
+    </div>
+  </div>
+
+  <!-- Area -->
+  <div class="sub-section" id="converter-area">
+    <div class="card">
+      <div class="card-title"><span>◼</span> Area Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="area-val" placeholder="1" value="1" oninput="convertUnit('area')">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select id="area-from" onchange="convertUnit('area')">
+            <option value="m2">m²</option>
+            <option value="km2">km²</option>
+            <option value="cm2">cm²</option>
+            <option value="ha">Hectare</option>
+            <option value="ac">Acre</option>
+            <option value="ft2">ft²</option>
+            <option value="in2">in²</option>
+            <option value="yd2">yd²</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>To</label>
+          <select id="area-to" onchange="convertUnit('area')">
+            <option value="ha">Hectare</option>
+            <option value="m2">m²</option>
+            <option value="km2">km²</option>
+            <option value="ac">Acre</option>
+            <option value="ft2">ft²</option>
+            <option value="in2">in²</option>
+            <option value="yd2">yd²</option>
+            <option value="cm2">cm²</option>
+          </select>
+        </div>
+      </div>
+      <div class="unit-result" id="area-result">—</div>
+    </div>
+  </div>
+
+  <!-- Volume -->
+  <div class="sub-section" id="converter-volume">
+    <div class="card">
+      <div class="card-title"><span>🧪</span> Volume Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="vol-val" placeholder="1" value="1" oninput="convertUnit('vol')">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select id="vol-from" onchange="convertUnit('vol')">
+            <option value="l">Liter</option>
+            <option value="ml">Milliliter</option>
+            <option value="m3">m³</option>
+            <option value="cm3">cm³</option>
+            <option value="gal">US Gallon</option>
+            <option value="qt">US Quart</option>
+            <option value="pt">US Pint</option>
+            <option value="cup">Cup</option>
+            <option value="floz">Fl Oz</option>
+            <option value="tsp">Teaspoon</option>
+            <option value="tbsp">Tablespoon</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>To</label>
+          <select id="vol-to" onchange="convertUnit('vol')">
+            <option value="ml">Milliliter</option>
+            <option value="l">Liter</option>
+            <option value="gal">US Gallon</option>
+            <option value="m3">m³</option>
+            <option value="qt">US Quart</option>
+            <option value="pt">US Pint</option>
+            <option value="cup">Cup</option>
+            <option value="floz">Fl Oz</option>
+            <option value="tsp">Teaspoon</option>
+            <option value="tbsp">Tablespoon</option>
+          </select>
+        </div>
+      </div>
+      <div class="unit-result" id="vol-result">—</div>
+    </div>
+  </div>
+
+  <!-- Data -->
+  <div class="sub-section" id="converter-data">
+    <div class="card">
+      <div class="card-title"><span>💾</span> Data Size Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="data-val" placeholder="1" value="1" oninput="convertUnit('data')">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select id="data-from" onchange="convertUnit('data')">
+            <option value="bit">Bit</option>
+            <option value="byte">Byte</option>
+            <option value="kb">Kilobyte (KB)</option>
+            <option value="mb">Megabyte (MB)</option>
+            <option value="gb">Gigabyte (GB)</option>
+            <option value="tb">Terabyte (TB)</option>
+            <option value="pb">Petabyte (PB)</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>To</label>
+          <select id="data-to" onchange="convertUnit('data')">
+            <option value="mb">Megabyte (MB)</option>
+            <option value="bit">Bit</option>
+            <option value="byte">Byte</option>
+            <option value="kb">Kilobyte (KB)</option>
+            <option value="gb">Gigabyte (GB)</option>
+            <option value="tb">Terabyte (TB)</option>
+            <option value="pb">Petabyte (PB)</option>
+          </select>
+        </div>
+      </div>
+      <div class="unit-result" id="data-result">—</div>
+    </div>
+  </div>
+
+  <!-- Time -->
+  <div class="sub-section" id="converter-time2">
+    <div class="card">
+      <div class="card-title"><span>⏱</span> Time Converter</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Value</label>
+          <input type="number" id="time-val" placeholder="1" value="1" oninput="convertUnit('time2')">
+        </div>
+        <div class="form-group">
+          <label>From</label>
+          <select id="time-from" onchange="convertUnit('time2')">
+            <option value="sec">Second</option>
+            <option value="min">Minute</option>
+            <option value="hr">Hour</option>
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>To</label>
+          <select id="time-to" onchange="convertUnit('time2')">
+            <option value="min">Minute</option>
+            <option value="sec">Second</option>
+            <option value="hr">Hour</option>
+            <option value="day">Day</option>
+            <option value="week">Week</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+          </select>
+        </div>
+      </div>
+      <div class="unit-result" id="time2-result">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- PERCENT / BUSINESS -->
+<div class="section" id="percent">
+  <div class="inner-tabs">
+    <button class="inner-tab active" onclick="showSub('percent','pct')">Percentage</button>
+    <button class="inner-tab" onclick="showSub('percent','pl')">Profit/Loss</button>
+    <button class="inner-tab" onclick="showSub('percent','disc')">Discount</button>
+    <button class="inner-tab" onclick="showSub('percent','gst')">GST / Tax</button>
+    <button class="inner-tab" onclick="showSub('percent','age')">Age</button>
+    <button class="inner-tab" onclick="showSub('percent','ratio')">Ratio</button>
+  </div>
+
+  <!-- Percentage -->
+  <div class="sub-section active" id="percent-pct">
+    <div class="card">
+      <div class="card-title"><span>%</span> Percentage Calculator</div>
+      <div style="display:grid;gap:1rem">
+        <div style="background:var(--display-bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">What is X% of Y?</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>X (%)</label>
+              <input type="number" id="pct1-x" placeholder="15" oninput="calcPct1()">
+            </div>
+            <div class="form-group">
+              <label>of Y</label>
+              <input type="number" id="pct1-y" placeholder="200" oninput="calcPct1()">
+            </div>
+          </div>
+          <div class="unit-result" id="pct1-res">—</div>
+        </div>
+        <div style="background:var(--display-bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">X is what % of Y?</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>X</label>
+              <input type="number" id="pct2-x" placeholder="30" oninput="calcPct2()">
+            </div>
+            <div class="form-group">
+              <label>Y</label>
+              <input type="number" id="pct2-y" placeholder="200" oninput="calcPct2()">
+            </div>
+          </div>
+          <div class="unit-result" id="pct2-res">—</div>
+        </div>
+        <div style="background:var(--display-bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem">
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">% Change from X to Y</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>From (X)</label>
+              <input type="number" id="pct3-x" placeholder="100" oninput="calcPct3()">
+            </div>
+            <div class="form-group">
+              <label>To (Y)</label>
+              <input type="number" id="pct3-y" placeholder="120" oninput="calcPct3()">
+            </div>
+          </div>
+          <div class="unit-result" id="pct3-res">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profit / Loss -->
+  <div class="sub-section" id="percent-pl">
+    <div class="card">
+      <div class="card-title"><span>💹</span> Profit / Loss Calculator</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cost Price (CP)</label>
+          <input type="number" id="pl-cp" placeholder="500" value="500">
+        </div>
+        <div class="form-group">
+          <label>Selling Price (SP)</label>
+          <input type="number" id="pl-sp" placeholder="650" value="650">
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcPL()">Calculate Profit / Loss</button>
+      <div class="multi-result" id="pl-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Profit / Loss</div>
+          <div class="r-value" id="pl-value"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">% Profit / Loss</div>
+          <div class="r-value" id="pl-pct" style="color:var(--accent4)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Status</div>
+          <div class="r-value" id="pl-status" style="color:var(--accent3)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discount -->
+  <div class="sub-section" id="percent-disc">
+    <div class="card">
+      <div class="card-title"><span>🏷</span> Discount Calculator</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Original Price (MRP)</label>
+          <input type="number" id="disc-price" placeholder="1000" value="1000">
+        </div>
+        <div class="form-group">
+          <label>Discount %</label>
+          <input type="number" id="disc-pct" placeholder="20" value="20">
+        </div>
+      </div>
+      <button class="calc-btn orange" onclick="calcDisc()">Calculate Discount</button>
+      <div class="multi-result" id="disc-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Discount Amount</div>
+          <div class="r-value" id="disc-amount"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Final Price</div>
+          <div class="r-value" id="disc-final" style="color:var(--accent3)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">You Save</div>
+          <div class="r-value" id="disc-save" style="color:var(--accent2)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GST -->
+  <div class="sub-section" id="percent-gst">
+    <div class="card">
+      <div class="card-title"><span>🧾</span> GST / Tax Calculator</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount</label>
+          <input type="number" id="gst-amount" placeholder="10000" value="10000">
+        </div>
+        <div class="form-group">
+          <label>GST / Tax Rate (%)</label>
+          <select id="gst-rate">
+            <option value="5">5% (Essential)</option>
+            <option value="12">12%</option>
+            <option value="18" selected>18% (Standard)</option>
+            <option value="28">28% (Luxury)</option>
+            <option value="custom">Custom %</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row single" id="gst-custom-row" style="display:none">
+        <div class="form-group">
+          <label>Custom Rate (%)</label>
+          <input type="number" id="gst-custom" placeholder="15">
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label>Calculation Type</label>
+          <select id="gst-type">
+            <option value="add">Add GST to Amount (exclusive)</option>
+            <option value="remove">Remove GST from Amount (inclusive)</option>
+          </select>
+        </div>
+      </div>
+      <button class="calc-btn green" onclick="calcGST()">Calculate GST</button>
+      <div class="multi-result" id="gst-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Base Amount</div>
+          <div class="r-value" id="gst-base"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">GST Amount</div>
+          <div class="r-value" id="gst-tax" style="color:var(--accent4)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Total Amount</div>
+          <div class="r-value" id="gst-total" style="color:var(--accent2)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Age Calculator -->
+  <div class="sub-section" id="percent-age">
+    <div class="card">
+      <div class="card-title"><span>🎂</span> Age Calculator</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="date" id="age-dob">
+        </div>
+        <div class="form-group">
+          <label>Calculate Age on Date</label>
+          <input type="date" id="age-to">
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcAge()">Calculate Age</button>
+      <div class="multi-result" id="age-results" style="display:none">
+        <div class="result-box">
+          <div class="r-label">Years</div>
+          <div class="r-value" id="age-years"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Total Months</div>
+          <div class="r-value" id="age-months" style="color:var(--accent2)"></div>
+        </div>
+        <div class="result-box">
+          <div class="r-label">Total Days</div>
+          <div class="r-value" id="age-days" style="color:var(--accent3)"></div>
+        </div>
+      </div>
+      <div id="age-detail" style="display:none" class="result-box" style="margin-top:1rem">
+        <div class="r-label">Next Birthday</div>
+        <div class="r-value" id="age-next" style="font-size:1rem;color:var(--accent4)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ratio -->
+  <div class="sub-section" id="percent-ratio">
+    <div class="card">
+      <div class="card-title"><span>⚖️</span> Ratio & Proportion</div>
+      <div style="background:var(--display-bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1rem">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">Simplify Ratio A : B</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>A</label>
+            <input type="number" id="rat-a" placeholder="24" oninput="calcRatio()">
+          </div>
+          <div class="form-group">
+            <label>B</label>
+            <input type="number" id="rat-b" placeholder="36" oninput="calcRatio()">
+          </div>
+        </div>
+        <div class="unit-result" id="rat-res">—</div>
+      </div>
+      <div style="background:var(--display-bg);border:1px solid var(--border);border-radius:12px;padding:1.2rem">
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.8rem">Find missing value: A/B = C/X</div>
+        <div class="form-row triple">
+          <div class="form-group">
+            <label>A</label>
+            <input type="number" id="prop-a" placeholder="3" oninput="calcProp()">
+          </div>
+          <div class="form-group">
+            <label>B</label>
+            <input type="number" id="prop-b" placeholder="4" oninput="calcProp()">
+          </div>
+          <div class="form-group">
+            <label>C</label>
+            <input type="number" id="prop-c" placeholder="9" oninput="calcProp()">
+          </div>
+        </div>
+        <div class="unit-result" id="prop-res">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ================================================
+// NAVIGATION
+// ================================================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mobile-menu button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  const mob = document.getElementById('mob-'+id);
+  if (mob) mob.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showSub(section, sub) {
+  const sectionEl = document.getElementById(section);
+  sectionEl.querySelectorAll('.sub-section').forEach(s => s.classList.remove('active'));
+  sectionEl.querySelectorAll('.inner-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(section+'-'+sub).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ================================================
+// STANDARD CALCULATOR
+// ================================================
+let stdExpr = '', stdHistory = [];
+function stdInput(v) {
+  stdExpr += v;
+  document.getElementById('std-display').textContent = stdExpr;
+}
+function stdClear() { stdExpr = ''; document.getElementById('std-display').textContent = '0'; document.getElementById('std-expr').textContent = ''; }
+function stdDel() { stdExpr = stdExpr.slice(0,-1); document.getElementById('std-display').textContent = stdExpr || '0'; }
+function stdToggleSign() {
+  if (stdExpr && !isNaN(stdExpr)) { stdExpr = String(-parseFloat(stdExpr)); document.getElementById('std-display').textContent = stdExpr; }
+}
+function stdEquals() {
+  try {
+    let expr = stdExpr.replace(/×/g,'*').replace(/÷/g,'/');
+    // handle %
+    let result = Function('"use strict"; return (' + expr + ')')();
+    result = parseFloat(result.toFixed(10));
+    document.getElementById('std-expr').textContent = stdExpr + ' =';
+    document.getElementById('std-display').textContent = result;
+    stdHistory.unshift({ expr: stdExpr, result });
+    if (stdHistory.length > 10) stdHistory.pop();
+    renderStdHistory();
+    stdExpr = String(result);
+  } catch(e) { document.getElementById('std-display').textContent = 'Error'; stdExpr = ''; }
+}
+function renderStdHistory() {
+  const el = document.getElementById('std-history');
+  el.innerHTML = stdHistory.map(h => `<div class="history-item"><span>${h.expr}</span><span class="h-result">${h.result}</span></div>`).join('');
+}
+// Keyboard support for standard
+document.addEventListener('keydown', e => {
+  if (document.getElementById('standard').classList.contains('active')) {
+    if ('0123456789.+-*/()'.includes(e.key)) stdInput(e.key);
+    else if (e.key === 'Enter') stdEquals();
+    else if (e.key === 'Backspace') stdDel();
+    else if (e.key === 'Escape') stdClear();
+    else if (e.key === '%') stdInput('%');
+  }
+  if (document.getElementById('scientific').classList.contains('active')) {
+    if ('0123456789.+-*/()'.includes(e.key)) sciInput(e.key);
+    else if (e.key === 'Enter') sciEquals();
+    else if (e.key === 'Backspace') sciDel();
+    else if (e.key === 'Escape') sciClear();
+  }
+});
+
+// ================================================
+// SCIENTIFIC CALCULATOR
+// ================================================
+let sciExpr = '';
+function sciInput(v) { sciExpr += v; document.getElementById('sci-display').textContent = sciExpr; }
+function sciFunc(f) { sciExpr += f; document.getElementById('sci-display').textContent = sciExpr; }
+function sciConst(c) {
+  const val = c === 'Math.PI' ? Math.PI.toFixed(8) : Math.E.toFixed(8);
+  sciExpr += val;
+  document.getElementById('sci-display').textContent = sciExpr;
+}
+function sciClear() { sciExpr = ''; document.getElementById('sci-display').textContent = '0'; document.getElementById('sci-expr').textContent = ''; }
+function sciDel() { sciExpr = sciExpr.slice(0,-1); document.getElementById('sci-display').textContent = sciExpr || '0'; }
+function sciToggleSign() { if (sciExpr && !isNaN(sciExpr)) { sciExpr = String(-parseFloat(sciExpr)); document.getElementById('sci-display').textContent = sciExpr; } }
+function factorial(n) {
+  n = Math.floor(n);
+  if (n < 0) return NaN;
+  if (n === 0 || n === 1) return 1;
+  let r = 1; for (let i = 2; i <= n; i++) r *= i; return r;
+}
+function sciEquals() {
+  try {
+    let expr = sciExpr
+      .replace(/×/g,'*').replace(/÷/g,'/')
+      .replace(/sin\(/g,'Math.sin(').replace(/cos\(/g,'Math.cos(').replace(/tan\(/g,'Math.tan(')
+      .replace(/asin\(/g,'Math.asin(').replace(/acos\(/g,'Math.acos(').replace(/atan\(/g,'Math.atan(')
+      .replace(/log\(/g,'Math.log10(').replace(/ln\(/g,'Math.log(')
+      .replace(/sqrt\(/g,'Math.sqrt(').replace(/cbrt\(/g,'Math.cbrt(')
+      .replace(/abs\(/g,'Math.abs(')
+      .replace(/factorial\(/g,'factorial(');
+    let result = Function('"use strict"; return (' + expr + ')')();
+    result = parseFloat(result.toFixed(10));
+    document.getElementById('sci-expr').textContent = sciExpr + ' =';
+    document.getElementById('sci-display').textContent = result;
+    sciExpr = String(result);
+  } catch(e) { document.getElementById('sci-display').textContent = 'Error'; sciExpr = ''; }
+}
+
+// ================================================
+// FINANCE
+// ================================================
+function fmt(n) { return new Intl.NumberFormat('en-IN', {maximumFractionDigits:2}).format(n); }
+
+function calcCI() {
+  const P = +document.getElementById('ci-p').value;
+  const r = +document.getElementById('ci-r').value / 100;
+  const t = +document.getElementById('ci-t').value;
+  const n = +document.getElementById('ci-n').value;
+  if (!P || !r || !t) return;
+  const A = P * Math.pow(1 + r/n, n*t);
+  const I = A - P;
+  const eff = (Math.pow(1 + r/n, n) - 1) * 100;
+  document.getElementById('ci-total').textContent = '₹' + fmt(A);
+  document.getElementById('ci-interest').textContent = '₹' + fmt(I);
+  document.getElementById('ci-eff').textContent = eff.toFixed(2) + '%';
+  document.getElementById('ci-results').style.display = 'grid';
+}
+
+function calcSI() {
+  const P = +document.getElementById('si-p').value;
+  const R = +document.getElementById('si-r').value;
+  const T = +document.getElementById('si-t').value;
+  if (!P || !R || !T) return;
+  const SI = P * R * T / 100;
+  document.getElementById('si-interest').textContent = '₹' + fmt(SI);
+  document.getElementById('si-total').textContent = '₹' + fmt(P + SI);
+  document.getElementById('si-yearly').textContent = '₹' + fmt(SI/T);
+  document.getElementById('si-results').style.display = 'grid';
+}
+
+function calcEMI() {
+  const P = +document.getElementById('emi-p').value;
+  const r = (+document.getElementById('emi-r').value) / 12 / 100;
+  const n = +document.getElementById('emi-n').value;
+  if (!P || !r || !n) return;
+  const EMI = P * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
+  const total = EMI * n;
+  document.getElementById('emi-emi').textContent = '₹' + fmt(EMI);
+  document.getElementById('emi-total').textContent = '₹' + fmt(total);
+  document.getElementById('emi-interest').textContent = '₹' + fmt(total - P);
+  document.getElementById('emi-results').style.display = 'grid';
+}
+
+function calcSIP() {
+  const m = +document.getElementById('sip-m').value;
+  const r = (+document.getElementById('sip-r').value) / 12 / 100;
+  const n = +document.getElementById('sip-t').value * 12;
+  if (!m || !r || !n) return;
+  const FV = m * (Math.pow(1+r,n) - 1) / r * (1+r);
+  const invested = m * n;
+  document.getElementById('sip-invested').textContent = '₹' + fmt(invested);
+  document.getElementById('sip-gain').textContent = '₹' + fmt(FV - invested);
+  document.getElementById('sip-total').textContent = '₹' + fmt(FV);
+  document.getElementById('sip-results').style.display = 'grid';
+}
+
+function toggleFDRD(type) {
+  document.getElementById('fd-form').style.display = type === 'fd' ? 'block' : 'none';
+  document.getElementById('rd-form').style.display = type === 'rd' ? 'block' : 'none';
+  document.getElementById('fd-tab').classList.toggle('active', type === 'fd');
+  document.getElementById('rd-tab').classList.toggle('active', type === 'rd');
+  document.getElementById('fd-results').style.display = 'none';
+}
+
+function calcFD() {
+  const P = +document.getElementById('fd-p').value;
+  const r = +document.getElementById('fd-r').value / 100;
+  const t = +document.getElementById('fd-t').value / 12;
+  const n = +document.getElementById('fd-n').value;
+  const A = P * Math.pow(1 + r/n, n*t);
+  document.getElementById('fd-principal').textContent = '₹' + fmt(P);
+  document.getElementById('fd-interest').textContent = '₹' + fmt(A - P);
+  document.getElementById('fd-total').textContent = '₹' + fmt(A);
+  document.getElementById('fd-results').style.display = 'grid';
+}
+
+function calcRD() {
+  const M = +document.getElementById('rd-m').value;
+  const r = +document.getElementById('rd-r').value / 400;
+  const n = +document.getElementById('rd-t').value;
+  const A = M * (Math.pow(1+r, n) - 1) / (1 - Math.pow(1+r, -1/3));
+  document.getElementById('fd-principal').textContent = '₹' + fmt(M * n);
+  document.getElementById('fd-interest').textContent = '₹' + fmt(A - M * n);
+  document.getElementById('fd-total').textContent = '₹' + fmt(A);
+  document.getElementById('fd-results').style.display = 'grid';
+}
+
+document.getElementById('gst-rate').addEventListener('change', function() {
+  document.getElementById('gst-custom-row').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+
+// ================================================
+// CURRENCY CONVERTER
+// ================================================
+const currencies = {
+  USD:{name:"US Dollar",symbol:"$"},INR:{name:"Indian Rupee",symbol:"₹"},EUR:{name:"Euro",symbol:"€"},
+  GBP:{name:"British Pound",symbol:"£"},JPY:{name:"Japanese Yen",symbol:"¥"},CNY:{name:"Chinese Yuan",symbol:"¥"},
+  AUD:{name:"Australian Dollar",symbol:"A$"},CAD:{name:"Canadian Dollar",symbol:"C$"},CHF:{name:"Swiss Franc",symbol:"₣"},
+  HKD:{name:"Hong Kong Dollar",symbol:"HK$"},SGD:{name:"Singapore Dollar",symbol:"S$"},SEK:{name:"Swedish Krona",symbol:"kr"},
+  NOK:{name:"Norwegian Krone",symbol:"kr"},DKK:{name:"Danish Krone",symbol:"kr"},NZD:{name:"New Zealand Dollar",symbol:"NZ$"},
+  KRW:{name:"South Korean Won",symbol:"₩"},MXN:{name:"Mexican Peso",symbol:"$"},BRL:{name:"Brazilian Real",symbol:"R$"},
+  RUB:{name:"Russian Ruble",symbol:"₽"},ZAR:{name:"South African Rand",symbol:"R"},TRY:{name:"Turkish Lira",symbol:"₺"},
+  AED:{name:"UAE Dirham",symbol:"د.إ"},SAR:{name:"Saudi Riyal",symbol:"﷼"},THB:{name:"Thai Baht",symbol:"฿"},
+  IDR:{name:"Indonesian Rupiah",symbol:"Rp"},MYR:{name:"Malaysian Ringgit",symbol:"RM"},PHP:{name:"Philippine Peso",symbol:"₱"},
+  PKR:{name:"Pakistani Rupee",symbol:"₨"},BDT:{name:"Bangladeshi Taka",symbol:"৳"},EGP:{name:"Egyptian Pound",symbol:"£"},
+  NGN:{name:"Nigerian Naira",symbol:"₦"},KES:{name:"Kenyan Shilling",symbol:"KSh"},GHS:{name:"Ghanaian Cedi",symbol:"₵"},
+  MAD:{name:"Moroccan Dirham",symbol:"د.م."},ILS:{name:"Israeli Shekel",symbol:"₪"},CZK:{name:"Czech Koruna",symbol:"Kč"},
+  PLN:{name:"Polish Zloty",symbol:"zł"},HUF:{name:"Hungarian Forint",symbol:"Ft"},RON:{name:"Romanian Leu",symbol:"lei"},
+  HRK:{name:"Croatian Kuna",symbol:"kn"},BGN:{name:"Bulgarian Lev",symbol:"лв"},TWD:{name:"Taiwan Dollar",symbol:"NT$"},
+  VND:{name:"Vietnamese Dong",symbol:"₫"},LKR:{name:"Sri Lankan Rupee",symbol:"₨"},NPR:{name:"Nepalese Rupee",symbol:"₨"},
+  QAR:{name:"Qatari Riyal",symbol:"﷼"},KWD:{name:"Kuwaiti Dinar",symbol:"د.ك"},BHD:{name:"Bahraini Dinar",symbol:".د.ب"},
+  OMR:{name:"Omani Rial",symbol:"﷼"},JOD:{name:"Jordanian Dinar",symbol:"JD"},IQD:{name:"Iraqi Dinar",symbol:"ع.د"},
+  DZD:{name:"Algerian Dinar",symbol:"دج"},LYD:{name:"Libyan Dinar",symbol:"ل.د"},TND:{name:"Tunisian Dinar",symbol:"د.ت"},
+  XOF:{name:"West African CFA",symbol:"CFA"},XAF:{name:"Central African CFA",symbol:"CFA"},
+  ARS:{name:"Argentine Peso",symbol:"$"},CLP:{name:"Chilean Peso",symbol:"$"},COP:{name:"Colombian Peso",symbol:"$"},
+  PEN:{name:"Peruvian Sol",symbol:"S/"},UYU:{name:"Uruguayan Peso",symbol:"$"},BOB:{name:"Bolivian Boliviano",symbol:"Bs"},
+  PYG:{name:"Paraguayan Guarani",symbol:"₲"},VES:{name:"Venezuelan Bolivar",symbol:"Bs.S"},
+  UAH:{name:"Ukrainian Hryvnia",symbol:"₴"},KZT:{name:"Kazakhstani Tenge",symbol:"₸"},
+  UZS:{name:"Uzbekistani Som",symbol:"soʻm"},GEL:{name:"Georgian Lari",symbol:"₾"},AMD:{name:"Armenian Dram",symbol:"֏"},
+  AZN:{name:"Azerbaijani Manat",symbol:"₼"},MXN:{name:"Mexican Peso",symbol:"$"},GTQ:{name:"Guatemalan Quetzal",symbol:"Q"},
+  CRC:{name:"Costa Rican Colon",symbol:"₡"},DOP:{name:"Dominican Peso",symbol:"RD$"},CUP:{name:"Cuban Peso",symbol:"₱"},
+  JMD:{name:"Jamaican Dollar",symbol:"J$"},TTD:{name:"Trinidad Dollar",symbol:"TT$"},
+  BWP:{name:"Botswana Pula",symbol:"P"},ZMW:{name:"Zambian Kwacha",symbol:"ZK"},TZS:{name:"Tanzanian Shilling",symbol:"TSh"},
+  UGX:{name:"Ugandan Shilling",symbol:"USh"},ETB:{name:"Ethiopian Birr",symbol:"Br"},RWF:{name:"Rwandan Franc",symbol:"Fr"},
+  MUR:{name:"Mauritian Rupee",symbol:"₨"},SCR:{name:"Seychellois Rupee",symbol:"₨"},
+  MMK:{name:"Myanmar Kyat",symbol:"K"},KHR:{name:"Cambodian Riel",symbol:"៛"},LAK:{name:"Lao Kip",symbol:"₭"},
+  MNT:{name:"Mongolian Tugrik",symbol:"₮"},AFN:{name:"Afghan Afghani",symbol:"؋"},
+  ISK:{name:"Icelandic Krona",symbol:"kr"},ALL:{name:"Albanian Lek",symbol:"L"},MKD:{name:"Macedonian Denar",symbol:"ден"},
+  BAM:{name:"Bosnian Mark",symbol:"KM"},RSD:{name:"Serbian Dinar",symbol:"din"},
+};
+
+// Fallback rates (USD base, approximate)
+const fallbackRates = {
+  USD:1,INR:83.5,EUR:0.92,GBP:0.79,JPY:149,CNY:7.24,AUD:1.53,CAD:1.36,CHF:0.9,HKD:7.82,
+  SGD:1.34,SEK:10.5,NOK:10.6,DKK:6.9,NZD:1.63,KRW:1320,MXN:17.2,BRL:4.97,RUB:89.5,
+  ZAR:18.8,TRY:30.5,AED:3.67,SAR:3.75,THB:35.2,IDR:15600,MYR:4.72,PHP:56.2,PKR:278,
+  BDT:110,EGP:30.9,NGN:1550,KES:129,GHS:12.5,MAD:10.1,ILS:3.7,CZK:22.8,PLN:4.05,
+  HUF:355,RON:4.7,HRK:6.8,BGN:1.8,TWD:31.8,VND:24700,LKR:325,NPR:133,QAR:3.64,
+  KWD:0.31,BHD:0.38,OMR:0.385,JOD:0.71,IQD:1310,DZD:134,LYD:4.82,TND:3.1,
+  XOF:610,XAF:610,ARS:850,CLP:945,COP:3920,PEN:3.72,UYU:38.5,BOB:6.9,PYG:7290,
+  VES:35,UAH:37.5,KZT:450,UZS:12600,GEL:2.65,AMD:406,AZN:1.7,GTQ:7.8,CRC:525,
+  DOP:57,CUP:24,JMD:155,TTD:6.8,BWP:13.5,ZMW:27,TZS:2530,UGX:3820,ETB:56,
+  RWF:1285,MUR:45.5,SCR:14.1,MMK:2090,KHR:4080,LAK:21000,MNT:3400,AFN:70.5,
+  ISK:138,ALL:97,MKD:57,BAM:1.8,RSD:110
+};
+
+let exchangeRates = {...fallbackRates};
+let ratesSource = 'fallback';
+
+async function fetchRates() {
+  try {
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const d = await r.json();
+    if (d.rates) { exchangeRates = d.rates; ratesSource = 'live'; }
+  } catch(e) { /* use fallback */ }
+  convertCurrency();
+  updateMultiCurrency();
+}
+
+function populateCurrencyDropdowns() {
+  const fromEl = document.getElementById('curr-from');
+  const toEl = document.getElementById('curr-to');
+  const sorted = Object.keys(currencies).sort();
+  sorted.forEach(code => {
+    const name = currencies[code].name;
+    const opt1 = new Option(`${code} — ${name}`, code);
+    const opt2 = new Option(`${code} — ${name}`, code);
+    fromEl.add(opt1); toEl.add(opt2);
+  });
+  fromEl.value = 'USD';
+  toEl.value = 'INR';
+}
+
+function convertCurrency() {
+  const amount = +document.getElementById('curr-amount').value || 0;
+  const from = document.getElementById('curr-from').value;
+  const to = document.getElementById('curr-to').value;
+  const fromRate = exchangeRates[from] || 1;
+  const toRate = exchangeRates[to] || 1;
+  const result = amount / fromRate * toRate;
+  const rate = toRate / fromRate;
+  const sym = currencies[to]?.symbol || '';
+  document.getElementById('curr-result').textContent = sym + fmt(result);
+  document.getElementById('curr-rate').textContent =
+    `1 ${from} = ${rate.toFixed(4)} ${to} · Rates: ${ratesSource === 'live' ? '🟢 Live' : '🟡 Approximate'}`;
+  updateMultiCurrency();
+}
+
+function swapCurrency() {
+  const f = document.getElementById('curr-from').value;
+  const t = document.getElementById('curr-to').value;
+  document.getElementById('curr-from').value = t;
+  document.getElementById('curr-to').value = f;
+  convertCurrency();
+}
+
+function updateMultiCurrency() {
+  const from = document.getElementById('curr-from').value;
+  const major = ['USD','EUR','GBP','JPY','INR','CNY','CAD','AUD','CHF','SGD'];
+  const fromRate = exchangeRates[from] || 1;
+  const el = document.getElementById('curr-multi');
+  el.innerHTML = major.filter(c => c !== from).map(code => {
+    const rate = (exchangeRates[code] || 1) / fromRate;
+    const sym = currencies[code]?.symbol || '';
+    return `<div style="background:var(--display-bg);border:1px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;">
+      <div style="font-size:0.7rem;color:var(--muted)">${code}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.9rem;color:var(--accent3)">${sym}${rate.toFixed(4)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================
+// TEMPERATURE
+// ================================================
+function convertTemp() {
+  const v = +document.getElementById('temp-val').value;
+  const from = document.getElementById('temp-from').value;
+  let celsius;
+  if (from === 'C') celsius = v;
+  else if (from === 'F') celsius = (v - 32) * 5/9;
+  else if (from === 'K') celsius = v - 273.15;
+  else if (from === 'R') celsius = (v - 491.67) * 5/9;
+
+  const results = {
+    '°Celsius': celsius.toFixed(4),
+    '°Fahrenheit': (celsius * 9/5 + 32).toFixed(4),
+    'Kelvin': (celsius + 273.15).toFixed(4),
+    '°Rankine': ((celsius + 273.15) * 9/5).toFixed(4),
+  };
+
+  document.getElementById('temp-results').innerHTML = Object.entries(results).map(([unit, val]) =>
+    `<div class="result-box" style="margin-top:0">
+      <div class="r-label">${unit}</div>
+      <div class="r-value" style="font-size:1.2rem">${val}</div>
+    </div>`
+  ).join('');
+}
+
+// ================================================
+// GENERIC UNIT CONVERTER
+// ================================================
+const unitDefs = {
+  len: { m:1, km:1000, cm:0.01, mm:0.001, mi:1609.344, yd:0.9144, ft:0.3048, 'in':0.0254, nm:1852 },
+  mass: { kg:1, g:0.001, mg:0.000001, t:1000, lb:0.453592, oz:0.0283495, st:6.35029 },
+  spd: { kmh:1, ms:3.6, mph:1.60934, kn:1.852, mach:1225.044 },
+  area: { m2:1, km2:1e6, cm2:0.0001, ha:10000, ac:4046.86, ft2:0.092903, in2:0.00064516, yd2:0.836127 },
+  vol: { l:1, ml:0.001, m3:1000, cm3:0.001, gal:3.78541, qt:0.946353, pt:0.473176, cup:0.236588, floz:0.0295735, tsp:0.00492892, tbsp:0.0147868 },
+  data: { bit:1, byte:8, kb:8192, mb:8388608, gb:8589934592, tb:8.79609e12, pb:9.00719e15 },
+  time2: { sec:1, min:60, hr:3600, day:86400, week:604800, month:2592000, year:31536000 },
+};
+
+const unitIds = {
+  len: ['len-val','len-from','len-to','len-result'],
+  mass: ['mass-val','mass-from','mass-to','mass-result'],
+  spd: ['spd-val','spd-from','spd-to','spd-result'],
+  area: ['area-val','area-from','area-to','area-result'],
+  vol: ['vol-val','vol-from','vol-to','vol-result'],
+  data: ['data-val','data-from','data-to','data-result'],
+  time2: ['time-val','time-from','time-to','time2-result'],
+};
+
+function convertUnit(type) {
+  const [valId, fromId, toId, resId] = unitIds[type];
+  const val = +document.getElementById(valId).value;
+  const from = document.getElementById(fromId).value;
+  const to = document.getElementById(toId).value;
+  const def = unitDefs[type];
+  const base = val * def[from];
+  const result = base / def[to];
+  document.getElementById(resId).textContent = `${val} ${from} = ${parseFloat(result.toPrecision(8))} ${to}`;
+}
+
+// ================================================
+// PERCENTAGE & BUSINESS
+// ================================================
+function calcPct1() {
+  const x = +document.getElementById('pct1-x').value;
+  const y = +document.getElementById('pct1-y').value;
+  document.getElementById('pct1-res').textContent = isNaN(x*y) ? '—' : `${x}% of ${y} = ${(x/100*y).toFixed(4)}`;
+}
+function calcPct2() {
+  const x = +document.getElementById('pct2-x').value;
+  const y = +document.getElementById('pct2-y').value;
+  document.getElementById('pct2-res').textContent = (!x||!y) ? '—' : `${x} is ${(x/y*100).toFixed(4)}% of ${y}`;
+}
+function calcPct3() {
+  const x = +document.getElementById('pct3-x').value;
+  const y = +document.getElementById('pct3-y').value;
+  if (!x||!y) { document.getElementById('pct3-res').textContent='—'; return; }
+  const ch = (y-x)/x*100;
+  document.getElementById('pct3-res').textContent = `${ch>=0?'↑ Increase':'↓ Decrease'} of ${Math.abs(ch).toFixed(4)}%`;
+}
+
+function calcPL() {
+  const cp = +document.getElementById('pl-cp').value;
+  const sp = +document.getElementById('pl-sp').value;
+  if (!cp||!sp) return;
+  const diff = sp - cp;
+  const pct = Math.abs(diff)/cp*100;
+  document.getElementById('pl-value').textContent = '₹' + fmt(Math.abs(diff));
+  document.getElementById('pl-pct').textContent = pct.toFixed(2) + '%';
+  document.getElementById('pl-status').textContent = diff >= 0 ? '✅ Profit' : '❌ Loss';
+  document.getElementById('pl-status').style.color = diff >= 0 ? 'var(--accent3)' : 'var(--accent2)';
+  document.getElementById('pl-results').style.display = 'grid';
+}
+
+function calcDisc() {
+  const price = +document.getElementById('disc-price').value;
+  const pct = +document.getElementById('disc-pct').value;
+  const disc = price * pct / 100;
+  const final = price - disc;
+  document.getElementById('disc-amount').textContent = '₹' + fmt(disc);
+  document.getElementById('disc-final').textContent = '₹' + fmt(final);
+  document.getElementById('disc-save').textContent = '₹' + fmt(disc);
+  document.getElementById('disc-results').style.display = 'grid';
+}
+
+function calcGST() {
+  const amount = +document.getElementById('gst-amount').value;
+  let rate = document.getElementById('gst-rate').value;
+  if (rate === 'custom') rate = +document.getElementById('gst-custom').value;
+  else rate = +rate;
+  const type = document.getElementById('gst-type').value;
+  let base, tax, total;
+  if (type === 'add') { base = amount; tax = amount * rate/100; total = amount + tax; }
+  else { total = amount; base = amount * 100 / (100 + rate); tax = total - base; }
+  document.getElementById('gst-base').textContent = '₹' + fmt(base);
+  document.getElementById('gst-tax').textContent = '₹' + fmt(tax);
+  document.getElementById('gst-total').textContent = '₹' + fmt(total);
+  document.getElementById('gst-results').style.display = 'grid';
+}
+
+function calcAge() {
+  const dob = new Date(document.getElementById('age-dob').value);
+  const to = new Date(document.getElementById('age-to').value);
+  if (!dob || !to || isNaN(dob) || isNaN(to)) return;
+  let y = to.getFullYear() - dob.getFullYear();
+  let m = to.getMonth() - dob.getMonth();
+  let d = to.getDate() - dob.getDate();
+  if (d < 0) { m--; d += new Date(to.getFullYear(), to.getMonth(), 0).getDate(); }
+  if (m < 0) { y--; m += 12; }
+  const totalDays = Math.floor((to - dob) / 86400000);
+  const totalMonths = y * 12 + m;
+  document.getElementById('age-years').textContent = `${y}y ${m}m ${d}d`;
+  document.getElementById('age-months').textContent = totalMonths;
+  document.getElementById('age-days').textContent = totalDays.toLocaleString();
+
+  // Next birthday
+  const next = new Date(to.getFullYear(), dob.getMonth(), dob.getDate());
+  if (next <= to) next.setFullYear(next.getFullYear() + 1);
+  const daysToNext = Math.ceil((next - to) / 86400000);
+  document.getElementById('age-next').textContent = `${next.toDateString()} (in ${daysToNext} days)`;
+  document.getElementById('age-results').style.display = 'grid';
+  document.getElementById('age-detail').style.display = 'block';
+}
+
+function calcRatio() {
+  const a = +document.getElementById('rat-a').value;
+  const b = +document.getElementById('rat-b').value;
+  if (!a||!b) { document.getElementById('rat-res').textContent='—'; return; }
+  const g = gcd(a,b);
+  document.getElementById('rat-res').textContent = `${a/g} : ${b/g}`;
+}
+function calcProp() {
+  const a = +document.getElementById('prop-a').value;
+  const b = +document.getElementById('prop-b').value;
+  const c = +document.getElementById('prop-c').value;
+  if (!a||!b||!c) { document.getElementById('prop-res').textContent='—'; return; }
+  document.getElementById('prop-res').textContent = `X = ${(b*c/a).toFixed(6)}`;
+}
+function gcd(a,b) { return b === 0 ? a : gcd(b, a%b); }
+
+// ================================================
+// INIT
+// ================================================
+window.addEventListener('DOMContentLoaded', () => {
+  populateCurrencyDropdowns();
+  fetchRates();
+  convertTemp();
+
+  // Default dates for age calculator
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('age-to').value = today;
+  document.getElementById('age-dob').value = '1990-01-01';
+
+  // Auto-convert units on load
+  setTimeout(() => {
+    convertUnit('len'); convertUnit('mass'); convertUnit('spd');
+    convertUnit('area'); convertUnit('vol'); convertUnit('data'); convertUnit('time2');
+  }, 100);
+});
+
+function toggleMenu() {
+  const ham = document.getElementById('hamburger');
+  const menu = document.getElementById('mobile-menu');
+  ham.classList.toggle('open');
+  menu.classList.toggle('open');
+}
+
+// Close mobile menu on outside click
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('mobile-menu');
+  const ham = document.getElementById('hamburger');
+  if (menu && menu.classList.contains('open') && !menu.contains(e.target) && !ham.contains(e.target)) {
+    menu.classList.remove('open');
+    ham.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>
